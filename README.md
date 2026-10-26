@@ -80,7 +80,14 @@ src/main/java/com/adrianausin/fxrate
 
 ## Run it
 
-Requires **JDK 21**, or just **Docker**. Port 8080 must be free.
+Requires **JDK 21**, or just **Docker**.
+
+| How | API port |
+|---|---|
+| Locally (`mvnw` or the IDE) | `8022` (`server.port` in `application.yml`) |
+| Docker / Docker Compose | `8080` (the image sets `SERVER_PORT=8080`) |
+
+The two ports differ on purpose, so a local or debug run and the Compose stack can be up at the same time.
 
 ### Locally
 
@@ -89,7 +96,7 @@ Requires **JDK 21**, or just **Docker**. Port 8080 must be free.
 .\mvnw.cmd spring-boot:run    # Windows
 ```
 
-Swagger UI: http://localhost:8080/swagger-ui.html
+Swagger UI: http://localhost:8022/swagger-ui.html
 
 ### With Docker Compose (API + Prometheus + Grafana)
 
@@ -104,9 +111,16 @@ docker compose up --build
 | Prometheus | http://localhost:9090 |
 | Grafana (dashboard opens as home page) | http://localhost:3000 (anonymous viewer, or `admin` / `admin`) |
 
+If a host port is already taken (`ports are not available ... bind: Only one usage of each socket address`), override it with `APP_PORT`, `PROMETHEUS_PORT` or `GRAFANA_PORT`. Only the host side changes; the services still talk to each other on the default ports inside the Compose network.
+
+```bash
+APP_PORT=8081 docker compose up --build              # macOS / Linux
+$env:APP_PORT=8081; docker compose up --build        # Windows PowerShell
+```
+
 ## API
 
-All endpoints live under `/api/v1`. Currency codes are case-insensitive ISO 4217 codes. [`requests.http`](requests.http) has ready-to-run examples for IntelliJ or VS Code.
+All endpoints live under `/api/v1`. Currency codes are case-insensitive ISO 4217 codes. [`requests.http`](requests.http) has ready-to-run examples for IntelliJ or VS Code against a local run (port 8022). The `curl` examples below target the Docker Compose stack on port 8080.
 
 | Method | Path | Description |
 |---|---|---|

@@ -27,5 +27,7 @@ COPY --from=extract /extract/layers/spring-boot-loader/ ./
 COPY --from=extract /extract/layers/snapshot-dependencies/ ./
 COPY --from=extract /extract/layers/application/ ./
 
+# Pin the container port: local runs use server.port from application.yml (8022)
+ENV SERVER_PORT=8080
 EXPOSE 8080
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "org.springframework.boot.loader.launch.JarLauncher"]
