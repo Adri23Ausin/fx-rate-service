@@ -20,6 +20,10 @@ fx:
   cache:
     latest-ttl: 10m
     historical-ttl: 24h
+  rate-limit:
+    enabled: true
+    capacity: 60
+    period: 1m
 
 resilience4j:
   circuitbreaker:
