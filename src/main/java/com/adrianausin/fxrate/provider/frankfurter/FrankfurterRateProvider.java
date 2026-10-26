@@ -2,8 +2,10 @@ package com.adrianausin.fxrate.provider.frankfurter;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.util.Optional;
 
 import com.adrianausin.fxrate.config.CacheConfig;
+import com.adrianausin.fxrate.config.FxMetrics;
 import com.adrianausin.fxrate.rates.FxRateException;
 import com.adrianausin.fxrate.rates.RateProvider;
 import com.adrianausin.fxrate.rates.RateSnapshot;
@@ -30,11 +32,13 @@ class FrankfurterRateProvider implements RateProvider {
 
     private final FrankfurterClient client;
     private final LastKnownRates lastKnownRates;
+    private final FxMetrics metrics;
     private final Clock clock;
 
-    FrankfurterRateProvider(FrankfurterClient client, LastKnownRates lastKnownRates, Clock clock) {
+    FrankfurterRateProvider(FrankfurterClient client, LastKnownRates lastKnownRates, FxMetrics metrics, Clock clock) {
         this.client = client;
         this.lastKnownRates = lastKnownRates;
+        this.metrics = metrics;
         this.clock = clock;
     }
 
@@ -66,13 +70,20 @@ class FrankfurterRateProvider implements RateProvider {
 
     RateSnapshot latestFallback(String base, Throwable error) {
         rethrowBusinessErrors(error);
+        Optional<RateSnapshot> lastKnown = lastKnownRates.latest(base);
+        if (lastKnown.isEmpty()) {
+            metrics.providerFallback("latest", "unavailable");
+            throw new RatesUnavailableException(base, error);
+        }
         log.warn("Frankfurter unavailable, serving last known rates for {}: {}", base, error.toString());
-        return lastKnownRates.latest(base).orElseThrow(() -> new RatesUnavailableException(base, error));
+        metrics.providerFallback("latest", "stale");
+        return lastKnown.get();
     }
 
     RateSnapshot historicalFallback(String base, LocalDate date, Throwable error) {
         rethrowBusinessErrors(error);
         log.warn("Frankfurter unavailable, no fallback for {} rates on {}: {}", base, date, error.toString());
+        metrics.providerFallback("historical", "unavailable");
         throw new RatesUnavailableException(base, error);
     }
 

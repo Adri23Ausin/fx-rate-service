@@ -5,6 +5,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Currency;
 
+import com.adrianausin.fxrate.config.FxMetrics;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
@@ -19,9 +20,11 @@ import org.springframework.stereotype.Service;
 public class CurrencyConverter {
 
     private final RateService rateService;
+    private final FxMetrics metrics;
 
-    public CurrencyConverter(RateService rateService) {
+    public CurrencyConverter(RateService rateService, FxMetrics metrics) {
         this.rateService = rateService;
+        this.metrics = metrics;
     }
 
     public ConversionResult convert(String from, String to, BigDecimal amount, @Nullable LocalDate date) {
@@ -34,6 +37,7 @@ public class CurrencyConverter {
         BigDecimal rate = snapshot.rateFor(target).orElseThrow(() -> new UnsupportedCurrencyException(target));
 
         BigDecimal result = amount.multiply(rate).setScale(minorUnits(target), RoundingMode.HALF_EVEN);
+        metrics.conversion(source, target);
         return new ConversionResult(source, target, amount, result, rate, snapshot.date(), snapshot.stale());
     }
 

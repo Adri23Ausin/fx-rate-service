@@ -1,5 +1,6 @@
 package com.adrianausin.fxrate.ratelimit;
 
+import com.adrianausin.fxrate.config.FxMetrics;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -12,13 +13,15 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 class RateLimitConfig implements WebMvcConfigurer {
 
     private final RateLimitProperties properties;
+    private final FxMetrics metrics;
 
-    RateLimitConfig(RateLimitProperties properties) {
+    RateLimitConfig(RateLimitProperties properties, FxMetrics metrics) {
         this.properties = properties;
+        this.metrics = metrics;
     }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new RateLimitInterceptor(properties)).addPathPatterns("/api/**");
+        registry.addInterceptor(new RateLimitInterceptor(properties, metrics)).addPathPatterns("/api/**");
     }
 }

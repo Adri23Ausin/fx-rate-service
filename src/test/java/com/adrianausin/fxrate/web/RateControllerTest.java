@@ -19,7 +19,7 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
-@WebMvcTest(RateController.class)
+@WebMvcTest(controllers = RateController.class, properties = "fx.rate-limit.enabled=false")
 class RateControllerTest {
 
     private static final RateSnapshot EUR_RATES = new RateSnapshot("EUR", LocalDate.of(2026, 10, 23),

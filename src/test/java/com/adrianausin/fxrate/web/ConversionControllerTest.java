@@ -15,7 +15,7 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
-@WebMvcTest(ConversionController.class)
+@WebMvcTest(controllers = ConversionController.class, properties = "fx.rate-limit.enabled=false")
 class ConversionControllerTest {
 
     @Autowired

@@ -3,6 +3,7 @@ package com.adrianausin.fxrate.ratelimit;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
+import com.adrianausin.fxrate.config.FxMetrics;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.github.bucket4j.Bandwidth;
@@ -26,13 +27,15 @@ class RateLimitInterceptor implements HandlerInterceptor {
     static final String REMAINING_HEADER = "X-Rate-Limit-Remaining";
 
     private final RateLimitProperties properties;
+    private final FxMetrics metrics;
     private final Cache<String, Bucket> buckets = Caffeine.newBuilder()
             .expireAfterAccess(Duration.ofHours(1))
             .maximumSize(100_000)
             .build();
 
-    RateLimitInterceptor(RateLimitProperties properties) {
+    RateLimitInterceptor(RateLimitProperties properties, FxMetrics metrics) {
         this.properties = properties;
+        this.metrics = metrics;
     }
 
     @Override
@@ -44,6 +47,7 @@ class RateLimitInterceptor implements HandlerInterceptor {
         response.setHeader(REMAINING_HEADER, Long.toString(probe.getRemainingTokens()));
         if (!probe.isConsumed()) {
             long retryAfter = Math.max(1, TimeUnit.NANOSECONDS.toSeconds(probe.getNanosToWaitForRefill()));
+            metrics.rateLimitRejected();
             throw new RateLimitExceededException(retryAfter);
         }
         return true;

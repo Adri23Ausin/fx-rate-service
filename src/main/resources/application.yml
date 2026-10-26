@@ -25,12 +25,31 @@ fx:
     capacity: 60
     period: 1m
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus, caches, circuitbreakers
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+
 resilience4j:
   circuitbreaker:
     # Circuit breaker wraps the retry: one failed call = all retry attempts exhausted
     circuit-breaker-aspect-order: 1
     instances:
       frankfurter:
+        register-health-indicator: true
         sliding-window-type: COUNT_BASED
         sliding-window-size: 10
         minimum-number-of-calls: 5
