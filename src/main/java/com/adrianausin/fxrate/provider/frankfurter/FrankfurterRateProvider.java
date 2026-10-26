@@ -5,7 +5,9 @@ import java.time.LocalDate;
 
 import com.adrianausin.fxrate.rates.RateProvider;
 import com.adrianausin.fxrate.rates.RateSnapshot;
+import com.adrianausin.fxrate.rates.UnsupportedCurrencyException;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 
 @Component
 class FrankfurterRateProvider implements RateProvider {
@@ -20,12 +22,20 @@ class FrankfurterRateProvider implements RateProvider {
 
     @Override
     public RateSnapshot latest(String base) {
-        return toSnapshot(client.latest(base));
+        try {
+            return toSnapshot(client.latest(base));
+        } catch (HttpClientErrorException.NotFound e) {
+            throw new UnsupportedCurrencyException(base);
+        }
     }
 
     @Override
     public RateSnapshot historical(String base, LocalDate date) {
-        return toSnapshot(client.historical(date, base));
+        try {
+            return toSnapshot(client.historical(date, base));
+        } catch (HttpClientErrorException.NotFound e) {
+            throw new UnsupportedCurrencyException(base);
+        }
     }
 
     private RateSnapshot toSnapshot(FrankfurterRatesResponse response) {

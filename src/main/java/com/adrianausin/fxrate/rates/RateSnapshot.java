@@ -5,6 +5,8 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * Exchange rates for one base currency as published on a given date.
@@ -26,6 +28,20 @@ public record RateSnapshot(String base, LocalDate date, Map<String, BigDecimal> 
             return Optional.of(BigDecimal.ONE);
         }
         return Optional.ofNullable(rates.get(currency));
+    }
+
+    /**
+     * Keeps only the requested currencies. An empty set means "all currencies".
+     */
+    public RateSnapshot only(Set<String> currencies) {
+        if (currencies.isEmpty()) {
+            return this;
+        }
+        Map<String, BigDecimal> filtered = new TreeMap<>();
+        for (String currency : currencies) {
+            filtered.put(currency, rateFor(currency).orElseThrow(() -> new UnsupportedCurrencyException(currency)));
+        }
+        return new RateSnapshot(base, date, filtered, fetchedAt, stale);
     }
 
     public RateSnapshot asStale() {
