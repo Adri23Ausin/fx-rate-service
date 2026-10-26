@@ -11,6 +11,44 @@ spring:
 server:
   port: 8080
 
+fx:
+  provider:
+    frankfurter:
+      base-url: https://api.frankfurter.dev
+      connect-timeout: 2s
+      read-timeout: 3s
+  cache:
+    latest-ttl: 10m
+    historical-ttl: 24h
+
+resilience4j:
+  circuitbreaker:
+    # Circuit breaker wraps the retry: one failed call = all retry attempts exhausted
+    circuit-breaker-aspect-order: 1
+    instances:
+      frankfurter:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        record-exceptions:
+          - org.springframework.web.client.ResourceAccessException
+          - org.springframework.web.client.HttpServerErrorException
+  retry:
+    retry-aspect-order: 2
+    instances:
+      frankfurter:
+        max-attempts: 3
+        wait-duration: 200ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - org.springframework.web.client.ResourceAccessException
+          - org.springframework.web.client.HttpServerErrorException
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
